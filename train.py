@@ -23,6 +23,14 @@ from torch.optim.lr_scheduler import OneCycleLR
 
 from torchvision import models
 
+import torch.onnx as tonnx  
+
+import warnings  
+warnings.filterwarnings('ignore')  #pour enlever les warning message
+
+#parameters 
+height_image, width_image = 200, 200
+
 
 class LeafDataset(Dataset):
     def __init__(self) -> None:
@@ -37,7 +45,7 @@ class LeafDataset(Dataset):
         self.labels = self.dataframe_Y.loc[:, 'healthy':'scab']
 
         self.transform = A.Compose([
-        A.RandomResizedCrop(height=200, width=200, p=1.0), #au lieu de 500 - sinon le cpu ne suit pas - et kill tout les kernels python
+        A.RandomResizedCrop(height=height_image, width=width_image, p=1.0), #au lieu de 500 - sinon le cpu ne suit pas - et kill tout les kernels python
         A.Rotate(20, p=1.0), 
         A.Flip(p=1.0),
         A.Transpose(p=1.0), 
@@ -98,6 +106,19 @@ class Model(nn.Module):
             scheduler.step()
             optimizer.zero_grad(set_to_none=True) 
 
+    def saveto_onnx(self, filename: str):
+        tonnx.export(
+            self.model,
+            torch.empty((1, 3, height_image, width_image), dtype=torch.float32),
+            filename,
+            export_params=True,
+            opset_version=9,   #v9 sinon problem avec des opérateurs - MaxPool
+            do_constant_folding=True,
+            input_names=['input'],
+            output_names=['output'],
+            dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}},
+    )
+
 if __name__ == '__main__':
 
     epochs = 2    #pour reduire le temps avec le cpu - sinon trop long
@@ -113,6 +134,8 @@ if __name__ == '__main__':
     scheduler = OneCycleLR(optimizer, max_lr=lr, total_steps=int(((len(train_set) - 1) // batch_size + 1) * epochs))
     
     model.fit_model(train_loader, optimizer, scheduler, epochs)
+    
     torch.save(model.state_dict(), 'leaf_cnn_mlp.pt')
+    model.saveto_onnx('onnx_model.onnx')
     
     
