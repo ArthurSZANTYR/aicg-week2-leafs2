@@ -2,6 +2,8 @@ let model; //var globale pour le model
 
 var loadFile = function(event) {  //run quand il y a un fichier selectionné
 
+    clearPreviousResults(); // supprimer les éléments existants
+
     const fileInput = document.getElementById('input');
     const image_view = document.getElementById('image_view');
 
@@ -35,11 +37,9 @@ var loadFile = function(event) {  //run quand il y a un fichier selectionné
 
             const prediction = await predict(imageTensor)
 
-            //const output_div = document.createElement("div");
-            //var output = document.createTextNode(prediction);
-            //output_div.appendChild(output);
             const output_div = document.getElementById("output_div");
-            output_div.insertAdjacentText("afterend", prediction);
+            output_div.innerHTML = prediction;
+            //output_div.insertAdjacentText("afterend", prediction);
 
             
         }
@@ -108,6 +108,18 @@ function findMaxIndex(arr) {
   }
   return maxIndex;
 }
+
+function clearPreviousResults() {
+    const outputDiv = document.getElementById('output_div');
+    const imageView = document.getElementById('image_view');
+  
+    if (outputDiv) {
+      outputDiv.innerHTML = ''; // Vide le contenu de l'élément
+    }
+    if (imageView) {
+      imageView.innerHTML = ''; // Vide le contenu de l'élément
+    }
+  }
 
 
   
