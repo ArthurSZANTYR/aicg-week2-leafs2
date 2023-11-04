@@ -10,29 +10,20 @@ warnings.filterwarnings('ignore')  #pour enlever les warning message
 
 from glob import glob #pour parcourir dossier
 
-# Import your custom model class
 from train import Model, LeafDataset
 
-# Define the same transformation as in your training script
-transform = A.Compose([
-            A.RandomResizedCrop(height=200, width=200, p=1.0), #au lieu de 500 - sinon le cpu ne suit pas - et kill tout les kernels python
-            A.Transpose(p=1.0), 
-            A.Normalize(p=1.0),  
-            ToTensorV2(p=1.0),
-            ], p=1.0)
 
 # Define a function to perform inference
-def predict(model, image, transform):
+def predict(model, image):
     # Load and preprocess the image
     #image = plt.imread(image_path)
     #les images sont déja ransformé avec l'appel de LeafDataset
+    print(image.shape)
     image = image.unsqueeze(0)  # Add a batch dimension
 
-    # Make a prediction
     with torch.no_grad():    #inference mode ppur la pred
         output = model(image)
 
-    # Convert the output to probabilities or class predictions as needed
     probabilities = torch.softmax(output, dim=1)
     predicted_class = torch.argmax(output, dim=1)
 
@@ -43,7 +34,6 @@ if __name__ == '__main__':
 
     test_set = LeafDataset()
 
-    # Load your trained model
     model_path = 'leaf_cnn_mlp.pt'
     model = Model()
     model.load_state_dict(torch.load(model_path))
@@ -52,12 +42,10 @@ if __name__ == '__main__':
     correct_predictions = 0
     total_predictions = 0
 
-    # Example inference on the test images
-
     for index in range(len(test_set)-1):
         image, label = test_set[index]
 
-        _, predicted_class = predict(model, image, transform)
+        _, predicted_class = predict(model, image)
         true_class = label.item()
 
 

@@ -21,17 +21,17 @@ var loadFile = function(event) {  //run quand il y a un fichier selectionné
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d'); //on crée un canva 2D
 
-            canvas.width = 200 ;  //attention c'est la taille du canva pas de l'image
-            canvas.height = 200 ;
+            img.width = 200
+            img.height = 200
 
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height );  //draw image
+            canvas.width = img.width;  //attention c'est la taille du canva pas de l'image
+            canvas.height = img.height ;
+
+            ctx.drawImage(img, 0, 0, img.width, img.height );  //draw image
             image_view.appendChild(canvas); // Display editied image in canvas  //image_view cet le nom du divider html
             
-            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height) // get image data from the canva
-            
-
+            const imageData = ctx.getImageData(0, 0, img.width, img.height) // get image data from the canva
             imageTensor = transform_image(imageData);
-            console.log(imageTensor.dims)
 
             const prediction = await predict(imageTensor)
             console.log(prediction)
@@ -40,19 +40,34 @@ var loadFile = function(event) {  //run quand il y a un fichier selectionné
 };
 
 function transform_image(img){
-    const inputArray = new Float32Array(1 * 3 * 200 * 200);//création d'un array pour stocker les données vidéo
+    const redArray = [];
+    const greenArray = [];
+    const blueArray = [];
 
-    // Copy image data into the inputArray
-    for (let i = 0; i < 200 * 200; i++) {
-      inputArray[i * 3] = img.data[i * 4] / 255;    //R
-      inputArray[i * 3 + 1] = img.data[i * 4 + 1] / 255; //G
-      inputArray[i * 3 + 2] = img.data[i * 4 + 2] / 255;  //B
+    for (let i = 0; i < 4*200*200; i += 4) {
+        redArray.push((img.data[i] - 0.485*255) / (0.229*255));  //on normalize en meme temps 
+        greenArray.push((img.data[i + 1] - 0.456*255) / (0.224*255));
+        blueArray.push((img.data[i + 2] - 0.406*255) / (0.225*255));
+        // Ignore data[i + 3] to filter out the alpha channel
     }
 
-    const tensor_image = new ort.Tensor('float32', inputArray, [1, 3, 200, 200]);  //converti le array en tensor
+    const transposedData = redArray.concat(greenArray, blueArray);
 
-    return tensor_image
+    let i, l = transposedData.length; // length, we need this for the loop
+
+    const float32Data = new Float32Array(3 * img.width * img.height);
+
+    for (i = 0; i < l; i++) {
+        float32Data[i] = transposedData[i]; // convert to float
+    }
+
+    const inputTensor = new ort.Tensor('float32', float32Data, [1, 3, img.width, img.height]);
+
+    return inputTensor;
+
 }
+
+
 
 async function predict(transformedImage) {
 
@@ -86,6 +101,8 @@ function findMaxIndex(arr) {
   }
   return maxIndex;
 }
+
+
   
 
 
