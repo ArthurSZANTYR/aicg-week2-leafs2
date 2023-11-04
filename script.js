@@ -34,7 +34,14 @@ var loadFile = function(event) {  //run quand il y a un fichier selectionné
             imageTensor = transform_image(imageData);
 
             const prediction = await predict(imageTensor)
-            console.log(prediction)
+
+            //const output_div = document.createElement("div");
+            //var output = document.createTextNode(prediction);
+            //output_div.appendChild(output);
+            const output_div = document.getElementById("output_div");
+            output_div.insertAdjacentText("afterend", prediction);
+
+            
         }
     })
 };
