@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Plant diseases recognition</title>
+  </head>
+  <body>
+    <script src="https://cdn.jsdelivr.net/npm/onnxruntime-web/dist/ort.min.js"></script>  <!-- bib js pour onnx runtime-->
+    <script src="script.js"></script>
+
+    <!-- <input type="file" accept="image/jpeg" id="input_file" onchange="loadFile(event)">  -->
+    <input type="file" id='input' onchange="loadFile(event)"> 
+    <div id="image_view"></div>   <!-- on va mettre ici l'image / permet de placer dans le fichier html-->  
+
+  </body>
+</html>
