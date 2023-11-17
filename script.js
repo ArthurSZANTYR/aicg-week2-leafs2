@@ -36,9 +36,12 @@ var loadFile = function(event) {  //run quand il y a un fichier selectionné
             imageTensor = transform_image(imageData);
 
             const prediction = await predict(imageTensor)
+            const classPrediction = prediction[0]
+            const probabilityPrediction = prediction[1]
 
             const output_div = document.getElementById("output_div");
-            output_div.innerHTML = prediction;
+            output_div.innerHTML = "Plants's state : " + classPrediction + "<br>" + 
+                       "Confidence : " + probabilityPrediction;
             //output_div.insertAdjacentText("afterend", prediction);
 
             
@@ -84,11 +87,11 @@ async function predict(transformedImage) {
     const probas = softmax(outputData);
 
     const predictedClassIndex = findMaxIndex(probas);
-
+    const classProbability = probas[predictedClassIndex]
     const classLabels = ['healthy', 'multiple_diseases', 'rust', 'scab'];
     const predictedClassName = classLabels[predictedClassIndex];
 
-    return predictedClassName;
+    return [predictedClassName, classProbability];
   }
 
 function softmax(data) {
